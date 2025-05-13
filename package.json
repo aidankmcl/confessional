@@ -1,0 +1,15 @@
+{
+  "name": "confessional",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build"
+  },
+  "devDependencies": {
+    "turbo": "^1.8.3"
+  }
+}
