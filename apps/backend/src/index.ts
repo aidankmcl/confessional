@@ -1,8 +1,13 @@
 import Fastify from "fastify";
-import z from "zod";
+import {
+  fastifyTRPCPlugin,
+  FastifyTRPCPluginOptions,
+} from '@trpc/server/adapters/fastify';
 import { validatorCompiler, serializerCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
 
-// import { setupTRPC } from "./trpc";
+import { createContext } from './context';
+import { appRouter, type AppRouter } from './router';
+
 
 async function buildServer() {
   const fastify = Fastify()
@@ -13,26 +18,23 @@ async function buildServer() {
   // // Register @fastify/websocket for tRPC WebSocket support
   // await fastify.register(require("@fastify/websocket"));
 
-  fastify.get(
-    "/ping",
-    {
-      schema: {
-        response: { 200: z.object({ pong: z.string() }) },
+  fastify.register(fastifyTRPCPlugin, {
+    trpcOptions: {
+      router: appRouter,
+      createContext,
+      onError({ path, error }) {
+        // report to error monitoring
+        console.error(`Error in tRPC handler on path '${path}':`, error);
       },
-    },
-    async (request, reply) => {
-      return { pong: "ok" };
-    },
-  );
-
-  // Register tRPC plugin
-  // setupTRPC(fastify);
+    } satisfies FastifyTRPCPluginOptions<AppRouter>['trpcOptions'],
+  });
 
   return fastify;
 }
 
 async function start() {
   const server = await buildServer();
+
   server.register(require("@fastify/cors"), {
     origin: "*",
     methods: ["GET", "POST"],
@@ -52,4 +54,4 @@ if (require.main === module) {
   start();
 }
 
-export { buildServer };
+export { buildServer, AppRouter };
