@@ -4,7 +4,7 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { useState } from 'react';
 
 import { TRPCProvider, type AppRouter } from '../api';
-import { Home } from './pages';
+import { Pages } from './pages';
 
 function makeQueryClient() {
   return new QueryClient({
@@ -50,7 +50,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        <Home />
+        <Pages />
       </TRPCProvider>
     </QueryClientProvider>
   );

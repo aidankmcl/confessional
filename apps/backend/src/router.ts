@@ -1,4 +1,4 @@
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
 type User = {
@@ -15,7 +15,13 @@ export const appRouter = t.router({
     return "pong"
   }),
   getUserById: t.procedure.input(z.string()).query((opts) => {
-    return users[opts.input]; // input type is string
+    const user = users[opts.input];
+    if (!user) throw new TRPCError({
+      code: "NOT_FOUND",
+      message: 'Found no User with that ID',
+    });
+
+    return user
   }),
   createUser: t.procedure
     .input(

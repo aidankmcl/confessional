@@ -2,8 +2,7 @@
   "name": "confessional",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
