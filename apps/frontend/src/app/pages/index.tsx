@@ -3,13 +3,18 @@ import {
   RouterProvider,
 } from "react-router";
 
-import { Home } from "./Home"
+import { Menu } from "./Menu"
+import { Game } from "./Game"
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element: <Menu />,
   },
+  {
+    path: "/game",
+    element: <Game />
+  }
 ]);
 
 export const Pages = () => {
