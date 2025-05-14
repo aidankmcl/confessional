@@ -1,9 +1,8 @@
 
-import { Link } from "react-router";
+import { Graphics, Page } from "~/app/components";
 
 export const Game = () => {
-  return <>
-    <h1>Game!</h1>
-    <Link to="/">Home</Link>
-  </>;
+  return <Page>
+    <Graphics />
+  </Page>;
 }

@@ -9,7 +9,8 @@ import { Game } from "./Game"
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Menu />,
+    // element: <Menu />,
+    element: <Game />
   },
   {
     path: "/game",

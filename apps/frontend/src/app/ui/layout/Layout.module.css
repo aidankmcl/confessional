@@ -1,0 +1,29 @@
+.wrapper {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row;
+}
+
+.aside {
+    min-width: 140px;
+    background: #f4f4f4;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.main {
+    flex: 1;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .aside {
+    width: 100px;
+    padding: 0.5rem;
+  }
+
+  .main {
+    padding: 0.5rem;
+  }
+}

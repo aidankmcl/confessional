@@ -2,7 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' http://localhost:3000;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-VITE_NONCE'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'nonce-VITE_NONCE'; connect-src 'self' http://localhost:3000;">
+    <link rel="stylesheet" href="./index.css" />
     <title>Confessional</title>
   </head>
   <body>

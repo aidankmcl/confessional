@@ -13,6 +13,7 @@
         "resolveJsonModule": true,
         "jsx": "react-jsx",
         "strict": true,
+        "plugins": [{ "name": "typescript-plugin-css-modules" }],
         "paths": {
             "~/*": ["src/*"]
         }
