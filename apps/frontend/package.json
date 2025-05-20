@@ -1,16 +1,27 @@
 {
-  "name": "frontend",
-  "productName": "frontend",
+  "name": "confessional",
+  "productName": "Confessional",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Confessional - A 3D Game Application",
   "main": ".vite/build/main.js",
   "scripts": {
     "dev": "electron-forge start",
+    "build": "npm run package:mac:unsigned",
     "start": "npm run dev",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "build:backend": "cd ../backend && npm run build",
+    "make:all": "npm run build:backend && npm run make",
+    "make:mac": "npm run build:backend && electron-forge make --platform=darwin",
+    "make:win": "npm run build:backend && electron-forge make --platform=win32",
+    "make:linux": "npm run build:backend && electron-forge make --platform=linux",
+    "package:all": "node scripts/package.js --all",
+    "package:mac": "node scripts/package.js --mac",
+    "package:win": "node scripts/package.js --win",
+    "package:linux": "node scripts/package.js --linux",
+    "package:mac:unsigned": "node scripts/build-unsigned-mac.js"
   },
   "keywords": [],
   "author": {

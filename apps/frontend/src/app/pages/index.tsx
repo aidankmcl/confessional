@@ -1,16 +1,16 @@
 import {
-  createBrowserRouter,
+  createHashRouter,
   RouterProvider,
 } from "react-router";
 
 import { Menu } from "./Menu"
 import { Game } from "./Game"
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
-    // element: <Menu />,
-    element: <Game />
+    element: <Menu />,
+    // element: <Game />
   },
   {
     path: "/game",
