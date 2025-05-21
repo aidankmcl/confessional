@@ -10,7 +10,7 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    extraResource: ['../backend/dist'],
+    extraResource: ['../backend/dist', "../../node_modules"],
     icon: './assets/icon',
     appBundleId: 'com.confessional.app',
     // Only sign when APPLE_IDENTITY is explicitly provided

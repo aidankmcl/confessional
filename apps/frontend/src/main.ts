@@ -1,11 +1,24 @@
-import { app, BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog, UtilityProcess, utilityProcess } from "electron";
 import path from "node:path";
+import util from "node:util";
 import started from "electron-squirrel-startup";
 import { spawn } from "child_process";
 import { type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs";
 
-let serverProcess: ChildProcessWithoutNullStreams | null = null;
+// Create or append to log file in userData
+const logPath = path.join(app.getPath('userData'), 'app.log');
+const logStream = fs.createWriteStream(logPath, { flags: 'a' });
+
+console.log = (...args) => {
+  const message = util.format(...args);
+  logStream.write(`[${new Date().toISOString()}] ${message}\n`);
+  process.stdout.write(`${message}\n`);
+};
+
+
+let serverProcess: UtilityProcess | null = null;
+// let serverProcess: ChildProcessWithoutNullStreams | null = null;
 let serverPort = 3000;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -13,7 +26,77 @@ if (started) {
   app.quit();
 }
 
+const forkBackend = async (): Promise<UtilityProcess | null> => {
+  if (!app.isPackaged) return null;
+
+  return new Promise((resolve, reject) => {
+    let proc: UtilityProcess | null = null;
+    let backendPath: string;
+    backendPath = path.join(process.resourcesPath, "dist/index.js");
+
+    // Check if backend exists
+    if (!fs.existsSync(backendPath)) {
+      dialog.showErrorBox(
+        "Backend Not Found",
+        `Could not find the backend at ${backendPath}. The application may not function correctly.`
+      );
+      console.error(`Backend not found at path: ${backendPath}`);
+    } else {
+      // Start backend process
+      try {
+        proc = utilityProcess.fork(backendPath, [], {
+          cwd: process.resourcesPath,
+          stdio: 'inherit',
+          env: {
+            ...process.env,
+            PORT: serverPort.toString(),
+            ELECTRON_RUN_AS_NODE: "1",
+          },
+        });
+
+        proc.stdout?.on("data", data => {
+          console.log(`[BACKEND] ${data}`);
+        });
+        proc.stderr?.on("data", data => {
+          console.log(`[BACKEND ERROR] ${data}`);
+        });
+        proc.on("error", (err, location, report) => {
+          console.error(`Failed to start backend process: ${location}: ${report}`);
+          dialog.showErrorBox(
+            "Backend Error",
+            `Failed to start backend process: ${location}: ${report}`
+          );
+        });
+        proc.on("exit", (code) => {
+          console.log(`Backend process exited with code ${code}`);
+          if (code !== 0 && code !== null) {
+            dialog.showErrorBox(
+              "Backend Error",
+              `Backend process exited with code ${code}`
+            );
+          }
+        });
+
+        proc.on("spawn", () => {
+          console.log(`[BACKEND] Server ready!`);
+          resolve(proc);
+        });
+      } catch (error) {
+        const errMessage = error instanceof Error ? error.message : "";
+        console.log(`Failed to start backend: ${errMessage}`);
+        dialog.showErrorBox(
+          "Backend Error",
+          `Failed to start backend: ${error}`
+        );
+        reject(error);
+      }
+    }
+  });
+}
+
 const createWindow = () => {
+  if (BrowserWindow.getAllWindows().length > 0) return;
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1800,
@@ -34,85 +117,6 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
-
-  // In production, use the bundled backend
-  if (process.env.NODE_ENV === "production") {
-    // Determine backend path (different between development and packaged app)
-    let backendPath: string;
-    const resourcesPath = process.resourcesPath;
-    const isDev = !app.isPackaged;
-    
-    if (isDev) {
-      backendPath = path.resolve(path.join(__dirname, "../../../backend/dist/index.js"));
-    } else {
-      backendPath = path.join(resourcesPath, "backend/dist/index.js");
-    }
-
-    // Check if backend exists
-    if (!fs.existsSync(backendPath)) {
-      dialog.showErrorBox(
-        "Backend Not Found",
-        `Could not find the backend at ${backendPath}. The application may not function correctly.`
-      );
-      console.error(`Backend not found at path: ${backendPath}`);
-    } else {
-      // Start backend process
-      try {
-        serverProcess = spawn("node", [backendPath], {
-          shell: true,
-          env: {
-            ...process.env,
-            PORT: serverPort.toString(),
-          },
-        });
-
-        serverProcess.stdout.on("data", (data) => {
-          console.log(`BACKEND: ${data}`);
-        });
-        
-        serverProcess.stderr.on("data", (data) => {
-          console.error(`BACKEND ERROR: ${data}`);
-        });
-        
-        serverProcess.on("error", (err) => {
-          console.error(`Failed to start backend process: ${err}`);
-          dialog.showErrorBox(
-            "Backend Error",
-            `Failed to start backend process: ${err.message}`
-          );
-        });
-
-        serverProcess.on("exit", (code) => {
-          console.log(`Backend process exited with code ${code}`);
-          if (code !== 0 && code !== null) {
-            dialog.showErrorBox(
-              "Backend Error",
-              `Backend process exited with code ${code}`
-            );
-          }
-        });
-      } catch (error) {
-        console.error("Failed to start backend:", error);
-        dialog.showErrorBox(
-          "Backend Error",
-          `Failed to start backend: ${error}`
-        );
-      }
-    }
-  }
-
-  // Old one for reference
-  // Use uvicorn's --reload flag to enable auto-reload on code changes
-  // serverProcess = spawn('uv', [
-  //   'run',
-  //   'uvicorn',
-  //   '--reload', // <-- this enables auto-reload
-  //   '--reload-dir', '../backend', // <-- specify the directory to watch
-  //   '--app-dir=../backend',
-  //   'main:app',
-  //   '--host', '127.0.0.1',
-  //   '--port', '8000'
-  // ]);
 };
 
 app.commandLine.appendSwitch("enable-features", "Vulkan,WebGPU");
@@ -120,7 +124,12 @@ app.commandLine.appendSwitch("enable-features", "Vulkan,WebGPU");
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", async () => {
+  // In built app, use the bundled backend - for whatever reason the `app.isPackaged` check wasn't working here.
+  serverProcess = await forkBackend();
+
+  createWindow();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -131,27 +140,18 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("activate", () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+// app.on("activate", () => {
+//   // On OS X it's common to re-create a window in the app when the
+//   // dock icon is clicked and there are no other windows open.
+//   if (BrowserWindow.getAllWindows().length === 0) {
+//     createWindow();
+//   }
+// });
 
 app.on("will-quit", () => {
   if (serverProcess) {
     try {
-      // Attempt a graceful shutdown first
-      serverProcess.kill("SIGTERM");
-      
-      // Force kill if still running after timeout
-      setTimeout(() => {
-        if (serverProcess) {
-          console.log("Force killing backend process");
-          serverProcess.kill("SIGKILL");
-        }
-      }, 2000);
+      serverProcess.kill();
     } catch (error) {
       console.error("Error shutting down backend process:", error);
     }
@@ -166,8 +166,8 @@ if (process.platform === 'win32') {
 
   app.setAppUserModelId('com.confessional.app');
 
-  if (process.argv.includes('--squirrel-install') || 
-      process.argv.includes('--squirrel-updated')) {
+  if (process.argv.includes('--squirrel-install') ||
+    process.argv.includes('--squirrel-updated')) {
     // Optionally do things such as:
     // - Install desktop and start menu shortcuts
     // - Add your .exe to the PATH

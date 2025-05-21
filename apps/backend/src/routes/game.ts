@@ -15,9 +15,6 @@ const state: GameState = {
 export const t = initTRPC.create();
 
 export const gameRouter = t.router({
-  ping: t.procedure.output(z.string()).query((opts) => {
-    return "pong"
-  }),
   getGameById: t.procedure.input(z.string()).query((opts) => {
     if (!Object.keys(state).length) throw new TRPCError({
       code: "NOT_FOUND",
