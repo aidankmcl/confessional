@@ -1,25 +1,57 @@
-import { writeFileSync } from 'node:fs';
+// graph.ts
+import { StateGraph, END } from "@langchain/langgraph";
+import { GameState, gameStateChannels } from "./state";
+import { AGENTS } from "./actors";
+import { orchestrator, humanTurn, makeAgentNode } from "./nodes";
+import { writeFileSync } from "node:fs";
 
-import { StateGraph, START, END } from '@langchain/langgraph'
+export function buildGameGraph(): StateGraph<GameState> {
+  const game = new StateGraph<GameState, GameState>(gameStateChannels);
 
-import { StateAnnotation } from './state';
-import { nodes } from './nodes';
+  // 1. Register nodes
+  // __start__ node: immediately transitions to orchestrator
+  game.addNode("__start__", (state: GameState) => ({}));
+  game.addNode("orchestrator", orchestrator);
+  game.addNode("human", humanTurn);
+  for (const agent of AGENTS) {
+    game.addNode(agent.key, makeAgentNode(agent));
+  }
 
-const workflow = new StateGraph(StateAnnotation)
-  .addNode('one', nodes.one)
-  .addNode('two', nodes.two)
-  .addNode('three', nodes.three)
-  // Conecting Edges Here
-  .addEdge(START, 'one')
-  .addEdge('one', 'two')
-  .addEdge('two', 'three')
-  .addEdge("three", END);
+  // 2. Wire up transitions
+  // Map actor keys to node names
+  const mapping: Record<string, string> = {
+    human: "human",
+    ...AGENTS.reduce((acc, a) => ({ ...acc, [a.key]: a.key }), {}),
+  };
 
-const graph = workflow.compile();
+  // __start__ always goes to orchestrator
+  // game.addEdge("__start__", "orchestrator");
+
+  // After orchestrator, dispatch based on state.nextActor
+  // game.addConditionalEdges(
+  //   "orchestrator",
+  //   (state) => state.nextActor,
+  //   mapping
+  // );
+
+  // After any turn, go back to the orchestrator
+  // for (const nodeName of Object.values(mapping)) {
+  //   game.addEdge(nodeName, "orchestrator");
+  // }
+
+  // 3. Entry (and optional exit)
+  game.setEntryPoint("__start__");
+  // game.setFinishPoint(END); // define a terminal condition as needed
+
+  return game;
+}
+
+// Example of compiling & running:
+const app = buildGameGraph().compile();
 
 const draw = async () => {
   try {
-    const drawableGraph = await graph.getGraphAsync();
+    const drawableGraph = await app.getGraphAsync();
     const png = await drawableGraph.drawMermaidPng();
     const buffer = Buffer.from(await png.arrayBuffer());
     writeFileSync('graph.png', buffer);
@@ -32,6 +64,13 @@ const draw = async () => {
 const main = async () => {
   await draw();
   console.log("Graphic generated successfully");
+
+  const initialState: GameState = {
+    messages: [],
+    currentSuspects: [],
+    nextActor: "",
+  };
+  const result = await app.invoke(initialState);
 
   return;
 };
