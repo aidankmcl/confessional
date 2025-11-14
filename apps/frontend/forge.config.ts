@@ -9,13 +9,20 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    // asar: true,
+    asar: true,
     extraResource: [
-      '../backend/dist',
-      '../../node_modules'
+      '../backend/dist'
     ],
     ignore: [
-      '^\\/node_modules$'
+      /^\/node_modules\//,
+      // /^\/\.vite\//,
+      /^\/src\//,
+      /^\/scripts\//,
+      /\.ts$/,
+      /\.tsx$/,
+      /vite.*\.config\.ts$/,
+      /forge\.config\.ts$/,
+      /tsconfig\.json$/
     ],
     icon: './assets/icon',
     appBundleId: 'com.confessional.app',
@@ -43,6 +50,9 @@ const config: ForgeConfig = {
       authors: 'Confessional Team',
       setupIcon: './assets/icon.ico',
       iconUrl: 'https://raw.githubusercontent.com/aidankmcl/confessional/main/apps/frontend/assets/icon.ico',
+      // Skip signing certificate requirement
+      certificateFile: undefined,
+      certificatePassword: undefined,
     }),
     new MakerZIP({}, ['darwin', 'linux']),
     new MakerRpm({

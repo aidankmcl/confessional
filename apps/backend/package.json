@@ -1,11 +1,12 @@
 {
-  "name": "confessional-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "A basic Fastify server using TypeScript and fastify-type-provider-zod",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc",
+    "build": "node esbuild.config.mjs",
+    "build:tsc": "tsc",
     "start": "node dist/index.js",
     "graph": "ts-node src/graph/index.ts"
   },
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.17",
+    "esbuild": "^0.27.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   }

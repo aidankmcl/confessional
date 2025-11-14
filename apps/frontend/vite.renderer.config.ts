@@ -12,6 +12,15 @@ export default defineConfig({
   html: {
     cspNonce: 'VITE_NONCE'
   },
+  build: {
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
   optimizeDeps: {
     exclude: ['@trpc/server/unstable-core-do-not-import'],
   },

@@ -8,6 +8,24 @@ const os = require('os');
 // Set encoding for console output
 process.env.FORCE_COLOR = '1';
 
+// Ensure 7-Zip is in PATH for Windows (required by Squirrel)
+if (os.platform() === 'win32') {
+  const sevenZipPaths = [
+    'C:\\Program Files\\7-Zip',
+    'C:\\Program Files (x86)\\7-Zip'
+  ];
+  
+  for (const sevenZipPath of sevenZipPaths) {
+    if (fs.existsSync(path.join(sevenZipPath, '7z.exe'))) {
+      if (!process.env.PATH.includes(sevenZipPath)) {
+        process.env.PATH = `${process.env.PATH};${sevenZipPath}`;
+        console.log(`\x1b[36mAdded 7-Zip to PATH: ${sevenZipPath}\x1b[0m`);
+      }
+      break;
+    }
+  }
+}
+
 // Utility function to run a command and log output
 function runCommand(command, options = {}) {
   console.log(`\x1b[36m> ${command}\x1b[0m`);
