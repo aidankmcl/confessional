@@ -1,3 +1,4 @@
+import { initTRPC } from '@trpc/server';
 import { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify';
 
 export function createContext({ req, res }: CreateFastifyContextOptions) {
@@ -5,4 +6,6 @@ export function createContext({ req, res }: CreateFastifyContextOptions) {
   return { req, res, user };
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>>;
+type Context = Awaited<ReturnType<typeof createContext>>;
+
+export const rootTrpc = initTRPC.context<Context>().create();

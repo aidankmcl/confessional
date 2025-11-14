@@ -1,5 +1,7 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+
+import { rootTrpc } from '../context';
 
 type GameState = {
   id: string;
@@ -12,10 +14,9 @@ const state: GameState = {
   player: "Aidan",
   npcPlayers: ["Becca", "Carl", "Denim"]
 };
-export const t = initTRPC.create();
 
-export const gameRouter = t.router({
-  getGameById: t.procedure.input(z.string()).query((opts) => {
+export const gameRouter = rootTrpc.router({
+  getGameById: rootTrpc.procedure.input(z.string()).query((opts) => {
     if (!Object.keys(state).length) throw new TRPCError({
       code: "NOT_FOUND",
       message: 'Found no active game',
@@ -23,11 +24,11 @@ export const gameRouter = t.router({
 
     return state;
   }),
-  getPlayers: t.procedure
+  getPlayers: rootTrpc.procedure
     .query(() => {
       return state.npcPlayers;
     }),
-  createGame: t.procedure
+  createGame: rootTrpc.procedure
     .input(z.object({ player: z.string(), npcPlayers: z.array(z.string()) }))
     .mutation((opts) => {
       const id = Date.now().toString();

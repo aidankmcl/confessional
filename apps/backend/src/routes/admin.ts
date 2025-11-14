@@ -1,13 +1,13 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+
 import { z } from 'zod';
 
-export const t = initTRPC.create();
+import { rootTrpc } from '../context';
 
-export const adminRouter = t.router({
-  ping: t.procedure.output(z.string()).query((opts) => {
+export const adminRouter = rootTrpc.router({
+  ping: rootTrpc.procedure.output(z.string()).query((opts) => {
     return "pong"
   }),
-  health: t.procedure.output(z.string()).query((opts) => {
+  health: rootTrpc.procedure.output(z.string()).query((opts) => {
     return "ok"
   })
 });
