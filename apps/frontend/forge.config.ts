@@ -9,8 +9,14 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 
 const config: ForgeConfig = {
   packagerConfig: {
-    asar: true,
-    extraResource: ['../backend/dist', "../../node_modules"],
+    // asar: true,
+    extraResource: [
+      '../backend/dist',
+      '../../node_modules'
+    ],
+    ignore: [
+      '^\\/node_modules$'
+    ],
     icon: './assets/icon',
     appBundleId: 'com.confessional.app',
     // Only sign when APPLE_IDENTITY is explicitly provided
@@ -36,7 +42,7 @@ const config: ForgeConfig = {
       name: 'Confessional',
       authors: 'Confessional Team',
       setupIcon: './assets/icon.ico',
-      iconUrl: 'https://raw.githubusercontent.com/your-org/confessional/main/apps/frontend/assets/icon.ico',
+      iconUrl: 'https://raw.githubusercontent.com/aidankmcl/confessional/main/apps/frontend/assets/icon.ico',
     }),
     new MakerZIP({}, ['darwin', 'linux']),
     new MakerRpm({
