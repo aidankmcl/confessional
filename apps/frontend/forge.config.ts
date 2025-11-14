@@ -1,8 +1,5 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
-import { MakerDeb } from '@electron-forge/maker-deb';
-import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
@@ -26,51 +23,14 @@ const config: ForgeConfig = {
     ],
     icon: './assets/icon',
     appBundleId: 'com.confessional.app',
-    // Only sign when APPLE_IDENTITY is explicitly provided
-    osxSign: process.env.APPLE_IDENTITY ? {
-      identity: process.env.APPLE_IDENTITY,
-      // hardenedRuntime: true,
-      // entitlements: 'entitlements.plist',
-      // 'entitlements-inherit': 'entitlements.plist',
-      // 'signature-flags': 'library'
-    } : undefined,
-    // For notarization (optional)
-    // osxNotarize: process.env.APPLE_ID && process.env.APPLE_PASSWORD ? {
-    //   appleId: process.env.APPLE_ID,
-    //   appleIdPassword: process.env.APPLE_PASSWORD,
-    //   teamId: process.env.APPLE_TEAM_ID,
-    // } : undefined,
   },
   rebuildConfig: {
     onlyModules: ['@dimforge/rapier3d-compat'],
   },
   makers: [
-    new MakerSquirrel({
-      name: 'Confessional',
-      authors: 'Confessional Team',
-      setupIcon: './assets/icon.ico',
-      iconUrl: 'https://raw.githubusercontent.com/aidankmcl/confessional/main/apps/frontend/assets/icon.ico',
-      // Skip signing certificate requirement
-      certificateFile: undefined,
-      certificatePassword: undefined,
-    }),
-    new MakerZIP({}, ['darwin', 'linux']),
-    new MakerRpm({
-      options: {
-        name: 'confessional',
-        productName: 'Confessional',
-        icon: './assets/icon.png',
-        bin: 'Confessional'
-      }
-    }),
-    new MakerDeb({
-      options: {
-        name: 'confessional',
-        productName: 'Confessional',
-        icon: './assets/icon.png',
-        bin: 'Confessional'
-      }
-    })
+    // ZIP maker for local testing convenience
+    // For Steam builds, use 'npm run package' instead of 'make' to get the raw executable folder
+    new MakerZIP({}, ['win32', 'darwin', 'linux']),
   ],
   plugins: [
     new VitePlugin({
