@@ -13,7 +13,16 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "electron-winstaller"
-    ]
+      "@parcel/watcher",
+      "@statelyai/agent",
+      "electron"
+    ],
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild"
+    ],
+    "patchedDependencies": {
+      "@statelyai/agent@2.0.0-next.5": "patches/@statelyai__agent@2.0.0-next.5.patch"
+    }
   }
 }

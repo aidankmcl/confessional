@@ -1,9 +1,6 @@
 import { app, BrowserWindow, dialog, UtilityProcess, utilityProcess } from "electron";
 import path from "node:path";
 import util from "node:util";
-import started from "electron-squirrel-startup";
-import { spawn } from "child_process";
-import { type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs";
 
 // Create or append to log file in userData
@@ -20,11 +17,6 @@ console.log = (...args) => {
 let serverProcess: UtilityProcess | null = null;
 // let serverProcess: ChildProcessWithoutNullStreams | null = null;
 let serverPort = 3000;
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (started) {
-  app.quit();
-}
 
 const forkBackend = async (): Promise<UtilityProcess | null> => {
   if (!app.isPackaged) return null;

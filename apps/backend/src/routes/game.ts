@@ -3,11 +3,13 @@ import { z } from 'zod';
 
 import { rootTrpc } from '../context';
 
-type GameState = {
-  id: string;
-  player: string;
-  npcPlayers: string[];
-};
+const StateSchema = z.object({
+  id: z.string(),
+  player: z.string(),
+  npcPlayers: z.array(z.string())
+});
+
+type GameState = z.infer<typeof StateSchema>;
 
 const state: GameState = {
   id: (new Date()).getTime().toString(),
@@ -16,20 +18,24 @@ const state: GameState = {
 };
 
 export const gameRouter = rootTrpc.router({
-  getGameById: rootTrpc.procedure.input(z.string()).query((opts) => {
-    if (!Object.keys(state).length) throw new TRPCError({
-      code: "NOT_FOUND",
-      message: 'Found no active game',
-    });
+  getGameById: rootTrpc.procedure
+    .input(z.string())
+    .output(StateSchema)
+    .query((opts) => {
+      if (!Object.keys(state).length) throw new TRPCError({
+        code: "NOT_FOUND",
+        message: 'Found no active game',
+      });
 
-    return state;
-  }),
+      return state;
+    }),
   getPlayers: rootTrpc.procedure
     .query(() => {
       return state.npcPlayers;
     }),
   createGame: rootTrpc.procedure
     .input(z.object({ player: z.string(), npcPlayers: z.array(z.string()) }))
+    .output(StateSchema)
     .mutation((opts) => {
       const id = Date.now().toString();
       const gameState: GameState = { id, player: opts.input.player, npcPlayers: opts.input.npcPlayers };
